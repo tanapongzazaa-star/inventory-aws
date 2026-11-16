@@ -190,6 +190,15 @@ aws --version
 
 **7.3 นำโค้ดขึ้นเครื่อง** (เลือกวิธีใดวิธีหนึ่ง)
 
+*วิธีที่แนะนำ — git clone จาก GitHub (ง่ายที่สุด สำหรับกลุ่มอื่นที่ทำตามคู่มือนี้)*
+```bash
+sudo apt install -y git
+sudo mkdir -p /opt/inventory && sudo chown ubuntu:ubuntu /opt/inventory
+git clone https://github.com/tanapongzazaa-star/inventory-aws.git /opt/inventory
+ls /opt/inventory        # ต้องเห็น backend database deploy docs frontend
+```
+ใช้วิธีนี้แล้ว ข้ามไปข้อ 7.4 ได้เลย
+
 *วิธี ก — ผ่าน S3 (ไม่ต้องมีไฟล์ .pem บนเครื่องที่ใช้อัปโหลด)*
 1. บนเว็บคอนโซล S3 → bucket `<BUCKET>` → อัปโหลดไฟล์ `inventory-aws.zip` ไปที่โฟลเดอร์ `deploy/`
 2. บน EC2:
