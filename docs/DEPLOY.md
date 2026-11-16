@@ -64,7 +64,7 @@ VPC → **Create VPC** → เลือก **VPC and more**
 | Public subnets | 2 |
 | Private subnets | 2 |
 | NAT gateways | **None** (ดูหัวข้องบ ด้านบน) |
-| VPC endpoints | None หรือ S3 Gateway (ไม่มีค่าใช้จ่าย) |
+| VPC endpoints | **S3 Gateway** (ไม่มีค่าใช้จ่าย; Wizard ผูกกับ route table ของ private subnet ให้อัตโนมัติ) |
 | DNS hostnames / DNS resolution | เปิดทั้งคู่ |
 
 กด **Customize subnets CIDR blocks** แล้วตั้งตามแล็บ 7:
@@ -73,8 +73,8 @@ VPC → **Create VPC** → เลือก **VPC and more**
 |--------|----|------|
 | `bu-lab-network-subnet-public1-us-east-1a` | us-east-1a | `10.0.0.0/24` |
 | `bu-lab-network-subnet-private1-us-east-1a` | us-east-1a | `10.0.1.0/24` |
-| `bu-lab-network-subnet-public1-us-east-1b` ← **วาง EC2 ที่นี่** | us-east-1b | `10.0.YY.0/24` |
-| `bu-lab-network-subnet-private1-us-east-1b` | us-east-1b | `10.0.3.0/24` |
+| `bu-lab-network-subnet-public2-us-east-1b` ← **วาง EC2 ที่นี่** | us-east-1b | `10.0.YY.0/24` |
+| `bu-lab-network-subnet-private2-us-east-1b` | us-east-1b | `10.0.3.0/24` |
 
 `YY` = เลขสองหลักท้ายของรหัสนักศึกษาคนที่สร้าง VPC (ถ้าสองหลักท้ายเป็น `0X` ให้ใช้ `10 + X`) เช่น รหัสลงท้าย 30 → `10.0.30.0/24`
 (ชื่อ subnet ที่ Wizard ตั้งให้อาจต่างเล็กน้อย ให้ดูที่ CIDR และ AZ เป็นหลัก)
@@ -153,7 +153,7 @@ EC2 → **Launch instance**
 | Instance type | `t3.micro` |
 | Key pair | `vockey` (Learner Lab ให้มา) |
 | VPC | `bu-lab-network-vpc` |
-| Subnet | **`bu-lab-network-subnet-public1-us-east-1b`** (10.0.YY.0/24) |
+| Subnet | **`bu-lab-network-subnet-public2-us-east-1b`** (10.0.YY.0/24) |
 | Auto-assign public IP | **Enable** |
 | Security group | เลือกที่มีอยู่: `bu-lab-network-sg` |
 | Storage | 8 GiB gp3 |
