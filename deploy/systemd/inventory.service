@@ -1,0 +1,19 @@
+# วางที่ /etc/systemd/system/inventory.service
+# ให้ Node.js API รันเป็น service: เปิดเครื่องแล้วขึ้นเอง และ restart เองเมื่อล่ม
+[Unit]
+Description=Inventory API (Node.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/inventory/backend
+# ค่า config อ่านจาก /opt/inventory/backend/.env (โหลดโดย dotenv ในโค้ด)
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

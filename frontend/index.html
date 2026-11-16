@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบจัดการสต็อกสินค้า</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- หน้า Login -->
+<div id="login-view" class="center">
+  <form id="login-form" class="panel narrow">
+    <h1>ระบบจัดการสต็อกสินค้า</h1>
+    <label>ชื่อผู้ใช้<input name="username" autocomplete="username" required></label>
+    <label>รหัสผ่าน<input name="password" type="password" autocomplete="current-password" required></label>
+    <p id="login-error" class="error" role="alert"></p>
+    <button class="primary">เข้าสู่ระบบ</button>
+  </form>
+</div>
+
+<!-- แอปหลัก -->
+<div id="app-view" hidden>
+  <header>
+    <strong>📦 Inventory</strong>
+    <nav>
+      <button data-page="dashboard">แดชบอร์ด</button>
+      <button data-page="products">สินค้า</button>
+      <button data-page="stock">รับเข้า / ตัดจ่าย</button>
+      <button data-page="history">ประวัติรายการ</button>
+    </nav>
+    <span class="spacer"></span>
+    <span id="who"></span>
+    <button id="logout">ออกจากระบบ</button>
+  </header>
+  <main id="main"></main>
+</div>
+
+<!-- ฟอร์มเพิ่ม/แก้ไขสินค้า -->
+<dialog id="pdlg">
+  <form id="pform">
+    <h2 id="pdlg-title">เพิ่มสินค้า</h2>
+    <div class="form-grid">
+      <label>SKU<input name="sku" required maxlength="50"></label>
+      <label>ชื่อสินค้า<input name="name" required maxlength="200"></label>
+      <label>หมวดหมู่<select name="category_id"></select></label>
+      <label>หน่วย<input name="unit" value="ชิ้น" maxlength="30"></label>
+      <label>ต้นทุน/หน่วย (บาท)<input name="unit_cost" type="number" min="0" step="0.01" value="0"></label>
+      <label>ราคาขาย (บาท)<input name="unit_price" type="number" min="0" step="0.01" value="0"></label>
+      <label>จุดสั่งซื้อ (min stock)<input name="min_stock" type="number" min="0" step="1" value="0"></label>
+      <label id="initial-wrap">จำนวนเริ่มต้น<input name="initial_quantity" type="number" min="0" step="1" value="0"></label>
+      <label>ตำแหน่งในคลัง<input name="location" maxlength="100" placeholder="เช่น A-01-03"></label>
+      <label>รูปสินค้า (JPG/PNG/WEBP ≤ 5MB)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    </div>
+    <label>รายละเอียด<textarea name="description" rows="2"></textarea></label>
+    <p id="pform-error" class="error" role="alert"></p>
+    <div class="actions">
+      <button type="button" id="pcancel">ยกเลิก</button>
+      <button class="primary">บันทึก</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
