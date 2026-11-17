@@ -81,6 +81,90 @@ ls /opt/inventory
 ตัวอย่างที่ถูก: `mysql -h bu-lab-database.xxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p < /opt/inventory/database/schema.sql`
 ถ้าขึ้น `No such file or directory` แปลว่ายังมี `<` `>` ครอบ endpoint อยู่
 
+ถ้าขึ้น `Access denied for user 'admin' (using password: YES)` แปลว่า**รหัสผ่าน DB ผิด** (คำว่า YES แปลว่า "มีการส่งรหัสผ่านมา" **ไม่ได้ให้พิมพ์ yes** ถ้าพิมพ์ `yes` ที่หน้าจอ `# คำสั่งสำหรับก๊อปวาง (ใช้คู่กับคู่มือสไลด์ภาพ)
+
+กดปุ่ม **Copy** มุมขวาบนของแต่ละบล็อก แล้ววางในหน้าจอดำของ EC2
+
+- **วางในหน้าจอ EC2 Instance Connect (ในเบราว์เซอร์):** กด **Ctrl+Shift+V** หรือคลิกขวาแล้วเลือก **Paste** (กด Ctrl+V อย่างเดียวจะไม่ได้)
+- วางทีละบล็อก กด Enter แล้วรอจนขึ้นบรรทัด `ubuntu@...$` ใหม่ ก่อนวางบล็อกถัดไป
+- ถ้ามีหน้าต่างสีม่วงหรือน้ำเงินถามเรื่อง restart services ให้กด **Enter** ผ่านไป
+- **ค้างที่ประมาณ 96%** (ขั้น *Processing triggers for man-db*) เป็นเรื่องปกติบน t3.micro **รอ 2–3 นาที** จะผ่านไปเอง ถ้าเกิน 5 นาทีให้กด Ctrl+C แล้วรัน `sudo dpkg --configure -a`
+
+---
+
+## บล็อก 0 · ทดสอบว่าเครื่องออกเน็ตผ่าน https ได้ (5 วินาที)
+
+```bash
+curl -4 -sS -o /dev/null -m 10 -w "%{http_code}
+" https://github.com
+```
+
+ต้องได้ `200` ถ้าได้ `timed out` → EC2 → Security Groups → `bu-lab-network-sg` → **Outbound rules** ต้องเป็น **All traffic → 0.0.0.0/0** (ค่าเริ่มต้น) ถ้ามีแค่ 22/80 ให้ Add rule → All traffic → 0.0.0.0/0 → Save
+
+## บล็อก 1 · ติดตั้ง Nginx, MySQL client, git (สไลด์ 12)
+
+```bash
+sudo apt update && sudo NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive apt install -y nginx mysql-client git curl
+```
+
+## บล็อก 2 · ติดตั้ง Node.js 22 (สไลด์ 12)
+
+> ⚠️ **วางทีละบรรทัด** บรรทัดแรกจะนิ่งไม่ขึ้นอะไรประมาณ 20–60 วินาที **ห้ามกด Ctrl+C** รอจนกลับมาที่ `ubuntu@...# คำสั่งสำหรับก๊อปวาง (ใช้คู่กับคู่มือสไลด์ภาพ)
+
+กดปุ่ม **Copy** มุมขวาบนของแต่ละบล็อก แล้ววางในหน้าจอดำของ EC2
+
+- **วางในหน้าจอ EC2 Instance Connect (ในเบราว์เซอร์):** กด **Ctrl+Shift+V** หรือคลิกขวาแล้วเลือก **Paste** (กด Ctrl+V อย่างเดียวจะไม่ได้)
+- วางทีละบล็อก กด Enter แล้วรอจนขึ้นบรรทัด `ubuntu@...$` ใหม่ ก่อนวางบล็อกถัดไป
+- ถ้ามีหน้าต่างสีม่วงหรือน้ำเงินถามเรื่อง restart services ให้กด **Enter** ผ่านไป
+- **ค้างที่ประมาณ 96%** (ขั้น *Processing triggers for man-db*) เป็นเรื่องปกติบน t3.micro **รอ 2–3 นาที** จะผ่านไปเอง ถ้าเกิน 5 นาทีให้กด Ctrl+C แล้วรัน `sudo dpkg --configure -a`
+
+---
+
+## บล็อก 1 · ติดตั้ง Nginx, MySQL client, git (สไลด์ 12)
+
+```bash
+sudo apt update && sudo NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive apt install -y nginx mysql-client git curl
+```
+
+
+> ถ้าเผลอขัด ระบบจะติดตั้ง Node.js 18 ของ Ubuntu ที่ไม่มี npm แล้วจะพังที่บล็อก 5 แก้ได้ด้วยการรันบล็อกนี้ใหม่ตั้งแต่บรรทัดแรก
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+```
+
+```bash
+sudo NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+```
+
+```bash
+node -v; npm -v
+```
+
+ต้องขึ้น `v22.x` และเลข npm `10.x` ถ้าขึ้น `v18` หรือ `npm: command not found` ให้รันบรรทัดแรกของบล็อกนี้ใหม่
+
+## บล็อก 3 · ดึงโค้ดจาก GitHub (สไลด์ 12)
+
+```bash
+sudo mkdir -p /opt/inventory && sudo chown ubuntu:ubuntu /opt/inventory
+git clone https://github.com/tanapongzazaa-star/inventory-aws.git /opt/inventory
+ls /opt/inventory
+```
+
+ต้องเห็น `backend  database  deploy  docs  frontend`
+
+---
+
+> **ก่อนทำบล็อก 4:** รอให้ RDS ขึ้นสถานะ **Available** แล้วก๊อป **Endpoint** จาก RDS → เลือกฐานข้อมูล → แท็บ Connectivity & security
+
+## บล็อก 4 · สร้างตารางในฐานข้อมูล (สไลด์ 13)
+
+แก้ `<RDS-ENDPOINT>` เป็น endpoint ของคุณ **โดยลบเครื่องหมาย `<` `>` ออกด้วย** แล้วใส่รหัสผ่าน DB ตอนที่ระบบถาม (ตัวอักษรจะไม่ขึ้นบนจอ เป็นเรื่องปกติ)
+
+ตัวอย่างที่ถูก: `mysql -h bu-lab-database.xxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p < /opt/inventory/database/schema.sql`
+ จะเกิดตัว y เต็มจอ แก้โดยปิดแท็บแล้ว Connect ใหม่)
+ลืมรหัสผ่าน: RDS → เลือกฐานข้อมูล → **Modify** → *New master password* → **Continue** → **Apply immediately** → รอ Available 1–2 นาที แล้วรันใหม่
+
 ```bash
 mysql -h <RDS-ENDPOINT> -u admin -p < /opt/inventory/database/schema.sql
 ```
@@ -171,6 +255,8 @@ curl -s http://127.0.0.1/api/health
 | เว็บขึ้น Welcome to nginx | `sudo rm -f /etc/nginx/sites-enabled/default && sudo systemctl restart nginx` |
 | แก้ `.env` แล้วยังไม่เปลี่ยน | `sudo systemctl restart inventory` |
 | curl / git clone ค้าง, `Connection timed out` | Outbound ของ `bu-lab-network-sg` ต้องเป็น All traffic → 0.0.0.0/0 (ดูบล็อก 0) |
+| `Access denied ... (using password: YES)` | รหัสผ่าน DB ผิด หรือชื่อผู้ใช้ไม่ใช่ admin ตั้งรหัสใหม่ที่ RDS → Modify → New master password |
+| หน้าจอขึ้นตัว y ไม่หยุด | เผลอพิมพ์คำสั่ง `yes` ปิดแท็บแล้ว Connect ใหม่ ไม่มีอะไรเสียหาย |
 | `npm: command not found` หรือ node เป็น v18 | รันบล็อก 2 ใหม่ตั้งแต่บรรทัดแรก ห้ามกด Ctrl+C |
 | apt ค้างที่ 96% นานเกิน 5 นาที | Ctrl+C แล้ว `sudo dpkg --configure -a` แล้วรันบล็อกเดิมซ้ำ |
 
