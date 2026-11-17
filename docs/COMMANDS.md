@@ -199,7 +199,7 @@ nano .env
 | `DB_HOST=` | RDS endpoint |
 | `DB_PASSWORD=` | รหัสผ่าน DB ที่ตั้งตอนสร้าง RDS |
 | `S3_BUCKET=` | ชื่อ bucket |
-| `SNS_TOPIC_ARN=` | ARN ของ topic `inventory-low-stock` |
+| `SNS_TOPIC_ARN=` | **Topic ARN** เต็ม เช่น `arn:aws:sns:us-east-1:123456789012:inventory-low-stock` (ก๊อปจาก SNS → Topics ไม่ใช่ Subscription ARN ที่มีรหัสต่อท้าย) |
 | `JWT_SECRET=` | ตัวอักษรจาก `openssl rand -hex 32` |
 
 จากนั้น
@@ -260,6 +260,8 @@ curl -s http://127.0.0.1/api/health
 | curl / git clone ค้าง, `Connection timed out` | Outbound ของ `bu-lab-network-sg` ต้องเป็น All traffic → 0.0.0.0/0 (ดูบล็อก 0) |
 | `Access denied ... (using password: YES)` | รหัสผ่าน DB ผิด หรือชื่อผู้ใช้ไม่ใช่ admin ตั้งรหัสใหม่ที่ RDS → Modify → New master password |
 | หน้าจอขึ้นตัว y ไม่หยุด | เผลอพิมพ์คำสั่ง `yes` ปิดแท็บแล้ว Connect ใหม่ ไม่มีอะไรเสียหาย |
+| อีเมลไม่เด้ง และ log ขึ้น `SNS publish failed: Invalid parameter: Topic Name` | `SNS_TOPIC_ARN` ผิด ใส่ Topic ARN เต็มจาก SNS → Topics แล้ว `sudo systemctl restart inventory` |
+| อีเมลไม่เด้ง ไม่มี error | ดู log: `journalctl -u inventory -n 50 --no-pager | grep -i sns` · Subscription ต้อง Confirmed · ยอดต้องลดจาก **เกิน** จุดสั่งซื้อ ลงมา **ถึงหรือต่ำกว่า** |
 | `npm: command not found` หรือ node เป็น v18 | รันบล็อก 2 ใหม่ตั้งแต่บรรทัดแรก ห้ามกด Ctrl+C |
 | apt ค้างที่ 96% นานเกิน 5 นาที | Ctrl+C แล้ว `sudo dpkg --configure -a` แล้วรันบล็อกเดิมซ้ำ |
 
