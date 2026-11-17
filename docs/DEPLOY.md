@@ -1,5 +1,7 @@
 # คู่มือ Deploy: Cloud Inventory บน AWS Learner Lab (EC2 + Nginx + RDS + S3 + SNS)
 
+> 📸 **อยากดูเป็นภาพทีละขั้น:** [คู่มือติดตั้งแบบสไลด์ภาพ (16 หน้า)](https://claude.ai/artifact/LaitF9ckP2U7dUkWRinsx4) ภาพจากการติดตั้งจริงทุกขั้น ใช้ดูคู่กับเอกสารนี้
+
 คู่มือนี้เขียนให้ทีมอื่นทำตามบน **AWS Learner Lab ของตัวเอง** จนได้ระบบที่ใช้งานได้จริง ใช้เวลาประมาณ **35–45 นาที**
 ชื่อ resource ใช้ตามที่สอนใน **Lab 7: Configure Web and Database** (VPC, Security Group, RDS, EC2 Ubuntu)
 ค่าที่ต้องจดไว้ใช้ต่อ: `<BUCKET>` `<RDS-ENDPOINT>` `<SNS-ARN>` `<EC2-PUBLIC-IP>`
@@ -101,11 +103,10 @@ EC2 → Security Groups → Create (เลือก VPC `bu-lab-network-vpc`)
 | Type | Port | Source |
 |------|------|--------|
 | HTTP | 80 | 0.0.0.0/0 |
-| SSH | 22 | My IP (IP ของคุณ) |
+| SSH | 22 | **0.0.0.0/0 ระหว่างติดตั้ง** → เปลี่ยนเป็น **My IP** หลังติดตั้งเสร็จ (ข้อ 7.8) |
 
-> **เรื่อง SSH:** ปุ่ม Connect แบบ *EC2 Instance Connect* ในเบราว์เซอร์เชื่อมต่อจากช่วง IP ของ AWS ไม่ใช่ IP ของคุณ
-> ถ้าตั้ง SSH เป็น My IP แล้วกด Connect ในเบราว์เซอร์ไม่ติด ให้ใช้ `ssh -i labsuser.pem ubuntu@<EC2-PUBLIC-IP>` จากเครื่องตัวเองแทน
-> (หรือเปิด 22 เป็น 0.0.0.0/0 ชั่วคราวระหว่างติดตั้ง แล้วแก้กลับ) เพื่อนในกลุ่มที่ IP ต่างกันให้เพิ่มทีละกฎ
+> **ทำไม SSH ต้องเป็น 0.0.0.0/0 ก่อน:** ปุ่ม Connect แบบ *EC2 Instance Connect* ในเบราว์เซอร์ (วิธีหลักในข้อ 7.1) เชื่อมต่อจากช่วง IP ของ AWS ไม่ใช่ IP ของคุณ
+> ถ้าตั้ง My IP ตั้งแต่แรก จะขึ้นแถบแดง **Failed to connect to your instance** ติดตั้งเสร็จแล้วค่อยกลับมาแก้เป็น My IP
 
 **`bu-lab-database-sg`** (Description: BU Lab Database SG — สร้างหลัง `bu-lab-network-sg`)
 
@@ -177,11 +178,21 @@ EC2 → **Launch instance**
 ## 7) ติดตั้งระบบบน EC2
 
 **7.1 เชื่อมต่อ** (ผู้ใช้ของ Ubuntu คือ `ubuntu`)
+
+**วิธีหลัก (ง่ายที่สุด ใช้ได้ทั้ง Windows/Mac):** EC2 → เลือกเครื่อง → **Connect** → แท็บ **EC2 Instance Connect** → Username `ubuntu` → **Connect**
+จะได้หน้าจอ terminal ในเบราว์เซอร์ วางคำสั่งด้วยการคลิกขวา (ต้องตั้ง SSH เป็น 0.0.0.0/0 ตามข้อ 3)
+
+*ทางเลือก: SSH จากเครื่องตัวเอง* (ไฟล์จาก Learner Lab → AWS Details → Download PEM)
 ```bash
-chmod 400 labsuser.pem      # ไฟล์จาก Learner Lab → AWS Details → Download PEM
+# Mac / Linux
+chmod 400 labsuser.pem
 ssh -i labsuser.pem ubuntu@<EC2-PUBLIC-IP>
 ```
-หรือ EC2 → เลือกเครื่อง → **Connect** → EC2 Instance Connect (ดูหมายเหตุ SSH ในหัวข้อ 3)
+```powershell
+# Windows PowerShell (chmod ใช้ไม่ได้ ใช้ icacls แทน)
+icacls labsuser.pem /inheritance:r /grant:r "$($env:USERNAME):(R)"
+ssh -i labsuser.pem ubuntu@<EC2-PUBLIC-IP>
+```
 
 **7.2 ติดตั้งซอฟต์แวร์**
 ```bash
@@ -282,6 +293,8 @@ sudo systemctl enable nginx
 sudo systemctl restart nginx
 ```
 
+**ติดตั้งเสร็จแล้ว:** กลับไปที่ `bu-lab-network-sg` → Edit inbound rules → เปลี่ยน SSH 22 เป็น **My IP** แล้ว Save rules
+
 ## 8) ทดสอบ
 
 เปิด `http://<EC2-PUBLIC-IP>/` แล้วเข้าสู่ระบบด้วย admin
@@ -328,8 +341,8 @@ sudo systemctl restart nginx
 
 | อาการ | สาเหตุที่น่าจะเป็น | วิธีแก้ |
 |-------|--------------------|---------|
-| `Permission denied (publickey)` ตอน SSH | ใช้ชื่อผู้ใช้ผิด หรือสิทธิ์ไฟล์ .pem | Ubuntu ต้องใช้ `ubuntu@...` และ `chmod 400 labsuser.pem` |
-| กด Connect ในเบราว์เซอร์แล้วต่อไม่ติด | SSH เปิดแค่ My IP | ใช้ ssh จากเครื่องตัวเอง หรือเปิด 22 ชั่วคราว (ดูหัวข้อ 3) |
+| `Permission denied (publickey)` / `UNPROTECTED PRIVATE KEY` ตอน SSH | ใช้ชื่อผู้ใช้ผิด หรือสิทธิ์ไฟล์ .pem | ใช้ `ubuntu@...` · Mac/Linux `chmod 400` · Windows ใช้ `icacls` ตามข้อ 7.1 หรือใช้ปุ่ม Connect ในเบราว์เซอร์แทน |
+| กด Connect ในเบราว์เซอร์แล้ว Failed to connect | SSH เปิดแค่ My IP | ตั้ง SSH 22 เป็น 0.0.0.0/0 ระหว่างติดตั้ง (ดูหัวข้อ 3) |
 | `aws: command not found` | ยังไม่ติดตั้ง AWS CLI | `sudo snap install aws-cli --classic` |
 | เปิดเว็บแล้วเจอหน้า "Welcome to nginx" | ยังไม่ได้ลบ default site | `sudo rm -f /etc/nginx/sites-enabled/default` แล้ว `sudo systemctl restart nginx` |
 | เปิดเว็บแล้ว **502 Bad Gateway** | API ไม่ได้รัน | `journalctl -u inventory -n 50 --no-pager` ดูข้อความ error |

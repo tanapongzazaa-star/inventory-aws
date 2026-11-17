@@ -42,6 +42,7 @@ inventory-aws/
 ## เริ่มต้นเร็ว
 
 - **Deploy ขึ้น AWS (สำหรับทีมที่ทดสอบโปรเจกต์นี้ ใช้เวลาประมาณ 35–45 นาที):** อ่าน [`docs/DEPLOY.md`](docs/DEPLOY.md)
+- **ดูเป็นภาพทีละขั้น:** [คู่มือติดตั้งแบบสไลด์ภาพ 16 หน้า](https://claude.ai/artifact/LaitF9ckP2U7dUkWRinsx4) ใช้คู่กับ DEPLOY.md
 - **รันทดสอบบนเครื่องตัวเอง:** ต้องมี MySQL 8 และ S3 bucket ที่เข้าถึงได้ด้วย AWS credentials ในเครื่อง
   ```bash
   mysql -u root -p < database/schema.sql
