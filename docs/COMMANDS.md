@@ -9,6 +9,15 @@
 
 ---
 
+## บล็อก 0 · ทดสอบว่าเครื่องออกเน็ตผ่าน https ได้ (5 วินาที)
+
+```bash
+curl -4 -sS -o /dev/null -m 10 -w "%{http_code}
+" https://github.com
+```
+
+ต้องได้ `200` ถ้าได้ `timed out` → EC2 → Security Groups → `bu-lab-network-sg` → **Outbound rules** ต้องเป็น **All traffic → 0.0.0.0/0** (ค่าเริ่มต้น) ถ้ามีแค่ 22/80 ให้ Add rule → All traffic → 0.0.0.0/0 → Save
+
 ## บล็อก 1 · ติดตั้ง Nginx, MySQL client, git (สไลด์ 12)
 
 ```bash
@@ -152,6 +161,7 @@ curl -s http://127.0.0.1/api/health
 | health ได้ `db: down` | ตรวจ `DB_HOST` และ `DB_PASSWORD` ใน `.env` แล้ว `sudo systemctl restart inventory` |
 | เว็บขึ้น Welcome to nginx | `sudo rm -f /etc/nginx/sites-enabled/default && sudo systemctl restart nginx` |
 | แก้ `.env` แล้วยังไม่เปลี่ยน | `sudo systemctl restart inventory` |
+| curl / git clone ค้าง, `Connection timed out` | Outbound ของ `bu-lab-network-sg` ต้องเป็น All traffic → 0.0.0.0/0 (ดูบล็อก 0) |
 | `npm: command not found` หรือ node เป็น v18 | รันบล็อก 2 ใหม่ตั้งแต่บรรทัดแรก ห้ามกด Ctrl+C |
 | apt ค้างที่ 96% นานเกิน 5 นาที | Ctrl+C แล้ว `sudo dpkg --configure -a` แล้วรันบล็อกเดิมซ้ำ |
 

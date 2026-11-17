@@ -116,6 +116,8 @@ EC2 → Security Groups → Create (เลือก VPC `bu-lab-network-vpc`)
 
 ผลคือ มีแต่เครื่อง EC2 ของเราที่ต่อฐานข้อมูลได้ ฐานข้อมูลไม่เปิดสู่อินเทอร์เน็ต
 
+> **Outbound rules ของทั้งสอง SG ห้ามแก้** ต้องเป็น **All traffic → 0.0.0.0/0** (ค่าเริ่มต้น) ถ้าเหลือแค่พอร์ต 22/80 เครื่องจะออกเน็ตผ่าน https ไม่ได้ และ `curl`, `git clone` จะค้าง
+
 ## 4) สร้าง RDS MySQL (Private Subnet, Multi-AZ)
 
 **4.1 DB Subnet Group (ทำก่อน)** RDS → Subnet groups → Create
