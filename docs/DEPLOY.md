@@ -167,7 +167,7 @@ EC2 → **Launch instance**
 | VPC | `bu-lab-network-vpc` |
 | Subnet | **`bu-lab-network-subnet-public2-us-east-1b`** (10.0.30.0/24) |
 | Auto-assign public IP | **Enable** |
-| Security group | เลือกที่มีอยู่: `bu-lab-network-sg` |
+| Firewall (security groups) | **Select existing security group** → `bu-lab-network-sg` (ห้ามเลือก Create ไม่อย่างนั้นจะขึ้น "security group already exists") |
 | Storage | 8 GiB gp3 |
 | **Advanced → IAM instance profile** | **`LabInstanceProfile`** |
 
