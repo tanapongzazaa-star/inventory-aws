@@ -1,8 +1,22 @@
 # คู่มือ Deploy: Cloud Inventory บน AWS Learner Lab (EC2 + Nginx + RDS + S3 + SNS)
 
-ทำตามลำดับ 0 → 9 โดยสร้างทีละบริการตามนี้ เพราะบริการหลังต้องใช้ค่าจากบริการก่อนหน้า
-คู่มือนี้ใช้ค่าและชื่อ resource ตามที่สอนใน **Lab 7: Configure Web and Database** (VPC, Security Group, RDS, EC2 Ubuntu)
+คู่มือนี้เขียนให้ทีมอื่นทำตามบน **AWS Learner Lab ของตัวเอง** จนได้ระบบที่ใช้งานได้จริง ใช้เวลาประมาณ **35–45 นาที**
+ชื่อ resource ใช้ตามที่สอนใน **Lab 7: Configure Web and Database** (VPC, Security Group, RDS, EC2 Ubuntu)
 ค่าที่ต้องจดไว้ใช้ต่อ: `<BUCKET>` `<RDS-ENDPOINT>` `<SNS-ARN>` `<EC2-PUBLIC-IP>`
+
+## ลำดับที่ทำให้เสร็จใน 45 นาที
+
+RDS แบบ Multi-AZ ใช้เวลาสร้าง 10–20 นาที จึง**สั่งสร้าง RDS ก่อน แล้วทำ SNS กับ EC2 ระหว่างรอ**
+
+| ช่วง | ทำอะไร | เวลาโดยประมาณ |
+|------|--------|----------------|
+| 1 | ข้อ 1 S3 → ข้อ 2 VPC → ข้อ 3 Security Groups | 8 นาที |
+| 2 | ข้อ 4 สั่งสร้าง RDS (กด Create แล้วไม่ต้องรอ) | 5 นาที |
+| 3 | **ระหว่างรอ RDS:** ข้อ 5 SNS → ข้อ 6 EC2 → ข้อ 7.1–7.3 ติดตั้งซอฟต์แวร์และดึงโค้ด | 12 นาที |
+| 4 | เมื่อ RDS ขึ้น **Available**: ข้อ 7.4–7.8 ตั้งค่าฐานข้อมูลและรันระบบ | 8 นาที |
+| 5 | ข้อ 8 ทดสอบ และเก็บหลักฐานส่งกลับ | 5–10 นาที |
+
+> ถ้าใน Learner Lab ของคุณมี VPC และ Security Group จาก Lab 7 อยู่แล้ว ใช้ของเดิมได้เลย ข้ามข้อ 2–3 แต่ต้องตรวจกฎของ SG ให้ตรงกับข้อ 3
 
 > เมนูหรือชื่อปุ่มใน AWS Console อาจต่างจากคู่มือเล็กน้อย ถ้าไม่ตรงให้ยึดเจตนาของแต่ละขั้น
 > ใช้ Region **us-east-1** เหมือนกันทุกบริการ
@@ -18,11 +32,9 @@
 | 1 | Amazon EC2 | รัน Nginx + Node.js API |
 | 2 | Amazon RDS (MySQL) | ฐานข้อมูล |
 | 3 | Amazon S3 | รูปสินค้า + ไฟล์รายงาน CSV |
-| 4 | Amazon SNS | อีเมลแจ้งเตือนสินค้าใกล้หมด (ใช้ในหัวข้อ Lab 11) |
+| 4 | Amazon SNS | อีเมลแจ้งเตือนสินค้าใกล้หมด |
 
 **เช็กเครดิตก่อน:** เข้า Learner Lab ดูแถบงบประมาณ (Budget) ว่าเหลือเท่าไร ถ้าเหลือน้อยหรือติดปัญหาให้ติดต่ออาจารย์ทันที
-
-**กำหนดส่ง:** วิดีโอ 17 พ.ย. เที่ยงคืน, เดโม 18 พ.ย. และต้องตั้งระบบกับทดสอบเสร็จอย่างน้อย 1 วันก่อนเดโม (ภายใน 17 พ.ย.)
 
 **ค่าตามแล็บ 7 ที่ใช้ในคู่มือนี้**
 
@@ -34,12 +46,12 @@
 | RDS | MySQL 8.4.x, Dev/Test, **Multi-AZ**, `db.t3.micro`, 20 GiB |
 | EC2 | **Ubuntu Server 24.04 LTS**, `t3.micro`, key pair `vockey`, Public Subnet ของ us-east-1b |
 
-**ข้อควรรู้เรื่องงบ ($50) — จุดที่เลือกต่างจากแล็บโดยตั้งใจ:**
+**ข้อควรรู้เรื่องงบ ($50):**
 - **NAT Gateway:** แล็บสร้างไว้ แต่โปรเจกต์นี้ไม่ต้องใช้ เพราะ EC2 อยู่ใน Public Subnet (ออกเน็ตผ่าน Internet Gateway) และ RDS ไม่ต้องออกเน็ต
   คิดเงินรายชั่วโมงตลอดที่เปิดอยู่ (ราว $1 ต่อวัน ตรวจราคาจริงที่ AWS Pricing Calculator) จึงตั้งเป็น **None**
-  ถ้าต้องโชว์ NAT ในเดโมให้สร้างวันเดโมแล้วลบทันที
-- **RDS Multi-AZ:** ใช้ตามแล็บ ราคาประมาณสองเท่าของ Single-AZ แต่ยังอยู่ในงบ และได้จุดขายเรื่อง High Availability ตอนเดโม
-  ถ้าเครดิตตึง เปลี่ยนเป็น Single-AZ ได้ที่ขั้น 4.2 (ระบบทำงานเหมือนเดิม)
+- **RDS Multi-AZ:** ใช้ตามแล็บ ราคาประมาณสองเท่าของ Single-AZ แต่ยังอยู่ในงบ และได้ High Availability
+  ถ้าเครดิตตึง เปลี่ยนเป็น Single-AZ ได้ที่ขั้น 4.2 (ระบบทำงานเหมือนเดิม และสร้างเร็วกว่า)
+- **ทำเสร็จและตรวจแล้ว** ให้ลบทรัพยากรตามข้อ 9 เพื่อไม่ให้เครดิตหมด
 - ดูยอดเครดิตทุกครั้งที่เริ่มและหยุดทำงาน
 
 ---
@@ -47,7 +59,7 @@
 ## 1) สร้าง S3 Bucket (เก็บรูป + รายงาน)
 
 1. S3 → **Create bucket**
-2. Bucket name: ชื่อที่ไม่ซ้ำใครทั้งโลก เช่น `inv-<รหัสกลุ่ม>-<ตัวเลขสุ่ม>` → จดเป็น `<BUCKET>`
+2. Bucket name: ชื่อที่ไม่ซ้ำใครทั้งโลก เช่น `inv-<รหัสนักศึกษา>-<ตัวเลขสุ่ม 3 หลัก>` → จดเป็น `<BUCKET>`
 3. Region: us-east-1
 4. **Block all public access = เปิดไว้ (ติ๊กครบ)** (Private Bucket ตามที่สอนใน Lab 10) แอปใช้ลิงก์ชั่วคราว (presigned URL) ดูรูป
 5. Encryption: ค่าเริ่มต้น (SSE-S3) แล้วกด Create
@@ -73,11 +85,10 @@ VPC → **Create VPC** → เลือก **VPC and more**
 |--------|----|------|
 | `bu-lab-network-subnet-public1-us-east-1a` | us-east-1a | `10.0.0.0/24` |
 | `bu-lab-network-subnet-private1-us-east-1a` | us-east-1a | `10.0.1.0/24` |
-| `bu-lab-network-subnet-public2-us-east-1b` ← **วาง EC2 ที่นี่** | us-east-1b | `10.0.YY.0/24` |
+| `bu-lab-network-subnet-public2-us-east-1b` ← **วาง EC2 ที่นี่** | us-east-1b | `10.0.30.0/24` |
 | `bu-lab-network-subnet-private2-us-east-1b` | us-east-1b | `10.0.3.0/24` |
 
-`YY` = เลขสองหลักท้ายของรหัสนักศึกษาคนที่สร้าง VPC (ถ้าสองหลักท้ายเป็น `0X` ให้ใช้ `10 + X`) เช่น รหัสลงท้าย 30 → `10.0.30.0/24`
-(ชื่อ subnet ที่ Wizard ตั้งให้อาจต่างเล็กน้อย ให้ดูที่ CIDR และ AZ เป็นหลัก)
+(ช่องที่ Wizard แสดง 4,096 IPs คือค่าเริ่มต้น /20 ให้แก้เป็น /24 ทั้ง 4 ช่อง ชื่อ subnet ที่ Wizard ตั้งให้อาจต่างเล็กน้อย ให้ดูที่ CIDR และ AZ เป็นหลัก)
 
 กด Create (ได้ Internet Gateway และ Route Table ให้อัตโนมัติ)
 
@@ -153,7 +164,7 @@ EC2 → **Launch instance**
 | Instance type | `t3.micro` |
 | Key pair | `vockey` (Learner Lab ให้มา) |
 | VPC | `bu-lab-network-vpc` |
-| Subnet | **`bu-lab-network-subnet-public2-us-east-1b`** (10.0.YY.0/24) |
+| Subnet | **`bu-lab-network-subnet-public2-us-east-1b`** (10.0.30.0/24) |
 | Auto-assign public IP | **Enable** |
 | Security group | เลือกที่มีอยู่: `bu-lab-network-sg` |
 | Storage | 8 GiB gp3 |
@@ -199,6 +210,8 @@ ls /opt/inventory        # ต้องเห็น backend database deploy docs
 ```
 ใช้วิธีนี้แล้ว ข้ามไปข้อ 7.4 ได้เลย
 
+<details><summary>ทางเลือกอื่น (ไม่จำเป็นถ้าใช้ git clone แล้ว)</summary>
+
 *วิธี ก — ผ่าน S3 (ไม่ต้องมีไฟล์ .pem บนเครื่องที่ใช้อัปโหลด)*
 1. บนเว็บคอนโซล S3 → bucket `<BUCKET>` → อัปโหลดไฟล์ `inventory-aws.zip` ไปที่โฟลเดอร์ `deploy/`
 2. บน EC2:
@@ -219,6 +232,8 @@ unzip -q ~/inventory-aws.zip -d /tmp/inv
 cp -r /tmp/inv/inventory-aws/* /opt/inventory/
 ls /opt/inventory        # ต้องเห็น backend database deploy docs frontend
 ```
+
+</details>
 
 **7.4 สร้างตารางในฐานข้อมูล** (ใช้ `mysql` บนเครื่อง EC2 แทน Adminer)
 ```bash
@@ -267,7 +282,7 @@ sudo systemctl enable nginx
 sudo systemctl restart nginx
 ```
 
-## 8) ทดสอบ (ทำเช็กลิสต์นี้ให้ครบก่อนอัดวิดีโอ)
+## 8) ทดสอบ
 
 เปิด `http://<EC2-PUBLIC-IP>/` แล้วเข้าสู่ระบบด้วย admin
 
@@ -279,18 +294,31 @@ sudo systemctl restart nginx
 - [ ] หน้า "ประวัติรายการ" เห็นรายการครบ พร้อมชื่อผู้ทำรายการ
 - [ ] ปุ่ม "ส่งออกรายงานสต็อก" ดาวน์โหลด CSV ได้ และมีไฟล์ใน `reports/` ของ S3
 - [ ] ลองเข้าฐานข้อมูลจากเครื่องตัวเอง/อินเทอร์เน็ตโดยตรง → ต้อง**ต่อไม่ได้** (หลักฐานว่า Private Subnet ทำงาน ใช้ในเดโมได้)
-- [ ] (ไม่บังคับ) RDS → Actions → *Reboot with failover* แล้วดูว่าแอปกลับมาใช้ได้ ทดสอบก่อนวันเดโมเท่านั้น ห้ามลองสดบนเวที
+- [ ] (ไม่บังคับ) RDS → Actions → *Reboot with failover* แล้วดูว่าแอปกลับมาใช้ได้ภายใน 1–2 นาที
+
+### หลักฐานที่ส่งกลับให้ทีมเจ้าของโปรเจกต์ (Peer verification)
+
+แคปหน้าจอ 6 ภาพนี้ แล้วแนบใน Submit X ตอนรายงานผลการทดสอบ
+
+1. เบราว์เซอร์เปิด `http://<EC2-PUBLIC-IP>/api/health` ขึ้น `{"status":"ok","db":"up"}`
+2. หน้า Dashboard หลังเพิ่มสินค้าที่มีรูปแล้ว
+3. S3 bucket โฟลเดอร์ `products/` มีไฟล์รูป และโฟลเดอร์ `reports/` มีไฟล์ CSV
+4. อีเมลแจ้งเตือนสินค้าใกล้หมดจาก SNS (ปิดที่อยู่อีเมลส่วนตัวได้)
+5. ข้อความ "สต็อกไม่พอ" ตอนตัดจ่ายเกินยอด
+6. RDS → Configuration ขึ้น **Multi-AZ: Yes** และ **Publicly accessible: No**
+
+ถ้าติดขั้นไหน ให้จดเลขข้อและข้อความ error ไว้ แล้วดูตาราง "แก้ปัญหาที่เจอบ่อย" ท้ายคู่มือ
 
 ## 9) คุมงบและการปิดระบบ
 
 | ทรัพยากร | แนวทาง |
 |----------|--------|
-| EC2 | **Stop** เมื่อไม่ใช้ (ไม่คิดค่า compute แต่ยังคิดค่า disk เล็กน้อย) Public IP เปลี่ยนทุกครั้งที่ Start ใหม่ ให้ตรวจ IP ใหม่ก่อนเดโม |
+| EC2 | **Stop** เมื่อไม่ใช้ (ไม่คิดค่า compute แต่ยังคิดค่า disk เล็กน้อย) Public IP เปลี่ยนทุกครั้งที่ Start ใหม่ ให้ตรวจ IP ใหม่ทุกครั้ง |
 | RDS | Multi-AZ คิดเงินราวสองเท่าของ Single-AZ ตลอดที่เปิดอยู่ ตรวจว่า **Stop temporarily** ได้หรือไม่เมื่อไม่ใช้ (ถ้าหยุดไว้ AWS จะเปิดกลับเองเมื่อครบ 7 วัน) |
 | NAT Gateway | ไม่สร้าง ถ้าสร้างเพื่อโชว์ให้ลบทันทีหลังเดโม และลบ Elastic IP ด้วย |
 | S3 / SNS | ค่าใช้จ่ายน้อยมากในขนาดโปรเจกต์นี้ |
 
-**ลบทรัพยากรหลังเดโม (ลำดับเดียวกับแล็บ 7):** Terminate EC2 → Delete RDS (ติ๊กไม่ทำ final snapshot) → Delete DB subnet group → (ถ้ามี) ลบ NAT Gateway และ Elastic IP → ลบ VPC → Empty แล้วลบ S3 bucket → ลบ SNS topic → Sign out และ End Lab
+**ลบทรัพยากรเมื่อทดสอบเสร็จ (ลำดับเดียวกับแล็บ 7):** Terminate EC2 → Delete RDS (ติ๊กไม่ทำ final snapshot) → Delete DB subnet group → (ถ้ามี) ลบ NAT Gateway และ Elastic IP → ลบ VPC → Empty แล้วลบ S3 bucket → ลบ SNS topic → Sign out และ End Lab
 
 เช็กยอดเครดิตที่แถบ Budget ของ Learner Lab ทุกครั้งที่เริ่มและหยุดทำงาน
 
