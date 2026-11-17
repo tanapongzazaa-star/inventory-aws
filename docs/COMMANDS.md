@@ -76,10 +76,19 @@ ls /opt/inventory
 
 ## บล็อก 4 · สร้างตารางในฐานข้อมูล (สไลด์ 13)
 
-แก้ `<RDS-ENDPOINT>` เป็น endpoint ของคุณก่อนกด Enter แล้วใส่รหัสผ่าน DB ตอนที่ระบบถาม (ตัวอักษรจะไม่ขึ้นบนจอ เป็นเรื่องปกติ)
+แก้ `<RDS-ENDPOINT>` เป็น endpoint ของคุณ **โดยลบเครื่องหมาย `<` `>` ออกด้วย** แล้วใส่รหัสผ่าน DB ตอนที่ระบบถาม (ตัวอักษรจะไม่ขึ้นบนจอ เป็นเรื่องปกติ)
+
+ตัวอย่างที่ถูก: `mysql -h bu-lab-database.xxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p < /opt/inventory/database/schema.sql`
+ถ้าขึ้น `No such file or directory` แปลว่ายังมี `<` `>` ครอบ endpoint อยู่
 
 ```bash
 mysql -h <RDS-ENDPOINT> -u admin -p < /opt/inventory/database/schema.sql
+```
+
+เช็กว่าสร้างตารางแล้ว (ต้องเห็น 4 ตาราง)
+
+```bash
+mysql -h <RDS-ENDPOINT> -u admin -p -e "USE inventory_db; SHOW TABLES;"
 ```
 
 ## บล็อก 5 · ติดตั้งแพ็กเกจและเตรียมไฟล์ .env (สไลด์ 13)
