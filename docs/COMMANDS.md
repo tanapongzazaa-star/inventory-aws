@@ -4,21 +4,22 @@
 
 - **วางในหน้าจอ EC2 Instance Connect (ในเบราว์เซอร์):** กด **Ctrl+Shift+V** หรือคลิกขวาแล้วเลือก **Paste** (กด Ctrl+V อย่างเดียวจะไม่ได้)
 - วางทีละบล็อก กด Enter แล้วรอจนขึ้นบรรทัด `ubuntu@...$` ใหม่ ก่อนวางบล็อกถัดไป
-- ถ้ามีหน้าต่างสีม่วงถามเรื่อง restart services ให้กด **Enter** ผ่านไป
+- ถ้ามีหน้าต่างสีม่วงหรือน้ำเงินถามเรื่อง restart services ให้กด **Enter** ผ่านไป
+- **ค้างที่ประมาณ 96%** (ขั้น *Processing triggers for man-db*) เป็นเรื่องปกติบน t3.micro **รอ 2–3 นาที** จะผ่านไปเอง ถ้าเกิน 5 นาทีให้กด Ctrl+C แล้วรัน `sudo dpkg --configure -a`
 
 ---
 
 ## บล็อก 1 · ติดตั้ง Nginx, MySQL client, git (สไลด์ 12)
 
 ```bash
-sudo apt update && sudo apt install -y nginx mysql-client git curl
+sudo apt update && sudo NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive apt install -y nginx mysql-client git curl
 ```
 
 ## บล็อก 2 · ติดตั้ง Node.js 22 (สไลด์ 12)
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
+sudo NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive apt install -y nodejs
 node -v
 ```
 
@@ -125,5 +126,6 @@ curl -s http://127.0.0.1/api/health
 | health ได้ `db: down` | ตรวจ `DB_HOST` และ `DB_PASSWORD` ใน `.env` แล้ว `sudo systemctl restart inventory` |
 | เว็บขึ้น Welcome to nginx | `sudo rm -f /etc/nginx/sites-enabled/default && sudo systemctl restart nginx` |
 | แก้ `.env` แล้วยังไม่เปลี่ยน | `sudo systemctl restart inventory` |
+| apt ค้างที่ 96% นานเกิน 5 นาที | Ctrl+C แล้ว `sudo dpkg --configure -a` แล้วรันบล็อกเดิมซ้ำ |
 
 ติดตั้งเสร็จแล้ว กลับไปแก้ SSH 22 ใน `bu-lab-network-sg` เป็น **My IP**
