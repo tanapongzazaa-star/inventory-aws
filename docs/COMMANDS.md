@@ -244,12 +244,15 @@ curl -s http://127.0.0.1/api/health
 
 ต้องได้ `{"status":"ok","db":"up"}` แล้วเปิดเบราว์เซอร์ไปที่ `http://<EC2-PUBLIC-IP>` ล็อกอินด้วย `admin` และรหัสผ่านจากบล็อก 7
 
+> ⚠️ **พิมพ์ `http://` นำหน้าให้ครบ** เช่น `http://32.x.x.x` ระบบนี้ไม่ได้เปิด https ถ้าพิมพ์แค่ IP บางครั้ง Chrome จะเปิดเป็น https เองแล้วขึ้น *ERR_CONNECTION_TIMED_OUT* ถ้ายังเด้งไป https ให้เปิดในหน้าต่างไม่ระบุตัวตน (Ctrl+Shift+N)
+
 ---
 
 ## ถ้าติด
 
 | อาการ | คำสั่งดูสาเหตุ / แก้ |
 |---|---|
+| เบราว์เซอร์ขึ้น ERR_CONNECTION_TIMED_OUT แต่ health ใน EC2 ได้ db: up | Chrome เปิดเป็น https เอง พิมพ์ `http://<IP>` ให้ครบ หรือใช้หน้าต่างไม่ระบุตัวตน |
 | เว็บขึ้น 502 Bad Gateway | `journalctl -u inventory -n 50 --no-pager` |
 | health ได้ `db: down` | ตรวจ `DB_HOST` และ `DB_PASSWORD` ใน `.env` แล้ว `sudo systemctl restart inventory` |
 | เว็บขึ้น Welcome to nginx | `sudo rm -f /etc/nginx/sites-enabled/default && sudo systemctl restart nginx` |
