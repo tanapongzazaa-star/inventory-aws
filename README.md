@@ -43,6 +43,7 @@ inventory-aws/
 
 - **Deploy ขึ้น AWS (สำหรับทีมที่ทดสอบโปรเจกต์นี้ ใช้เวลาประมาณ 35–45 นาที):** อ่าน [`docs/DEPLOY.md`](docs/DEPLOY.md)
 - **คำสั่งพร้อมปุ่ม Copy:** [`docs/COMMANDS.md`](docs/COMMANDS.md) ก๊อปวางในหน้าจอ EC2 ได้ทีละบล็อก
+- **สไลด์นำเสนอ (PDF):** [`docs/slides/Cloud-Inventory-Demo.pdf`](docs/slides/Cloud-Inventory-Demo.pdf)
 - **ดูเป็นภาพทีละขั้น:** [คู่มือติดตั้งแบบสไลด์ภาพ 16 หน้า](https://claude.ai/artifact/LaitF9ckP2U7dUkWRinsx4) ใช้คู่กับ DEPLOY.md
 - **รันทดสอบบนเครื่องตัวเอง:** ต้องมี MySQL 8 และ S3 bucket ที่เข้าถึงได้ด้วย AWS credentials ในเครื่อง
   ```bash
